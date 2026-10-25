@@ -1,0 +1,340 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#172720">
+  <meta name="description" content="Bancada virtual do robô 4x4: conexões, motores e atuadores ao vivo.">
+  <title>Bancada virtual 4×4 · Grupo 2</title>
+  <link rel="stylesheet" href="/bancada.css">
+</head>
+<body>
+  <!--
+    THESIS: Uma bancada que torna sinal, fio, atuador e movimento legíveis de uma vez; recusa o dashboard abstrato como explicação da montagem.
+    OWN-WORLD: Instrumentação de campo mineral, placas claras, trilhos escuros e fios funcionais codificados sem decoração eletrônica fictícia.
+    STORY: O aluno identifica cada GPIO, comanda o robô e acompanha M1–M4, relés, bomba, som e visão responderem ao vivo.
+    FIRST VIEWPORT: Esquema elétrico animado domina a esquerda; teste manual e quatro velocidades medidas ocupam uma coluna operacional à direita.
+    FORM: [seed: inherited-bancada-physical-v1] Extensão Operate precisa do sistema visual estabelecido; bancada física foi determinada pelo requisito, sem rodada conceitual aberta.
+    FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance
+  -->
+  <a class="skip-link" href="#esquema">Ir para o esquema</a>
+
+  <header class="bench-header">
+    <a class="back-link" href="/" aria-label="Voltar ao centro de comando">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 5-7 7 7 7"/></svg>
+      Painel geral
+    </a>
+    <div class="bench-title">
+      <h1>Bancada virtual 4×4</h1>
+      <p>Conexões, velocidade e atuação — tudo na mesma tela</p>
+    </div>
+    <div class="live-status" id="liveStatus" data-state="waiting" role="status" aria-live="polite">
+      <i aria-hidden="true"></i>
+      <span><strong id="liveStatusTitle">Servidor conectado</strong><small id="liveStatusDetail">pressione Play no Webots</small></span>
+    </div>
+    <button class="header-emergency" id="headerEmergencyButton" type="button" aria-pressed="false">PARAR</button>
+  </header>
+
+  <main class="bench-shell">
+    <section class="orientation-strip" aria-label="Finalidade das telas">
+      <div>
+        <strong>Esta tela mostra a montagem.</strong>
+        <span>Os fios acendem, M1–M4 giram e as velocidades mudam em tempo real.</span>
+      </div>
+      <div>
+        <strong>O Webots mostra o movimento físico.</strong>
+        <span>A janela ESP32-CAM é apenas o que o robô enxerga; feche o X para ver o carro por fora.</span>
+      </div>
+    </section>
+
+    <section class="bench-grid">
+      <article class="schematic-panel" id="esquema" aria-labelledby="schematicTitle">
+        <header class="panel-heading">
+          <div>
+            <h2 id="schematicTitle">Montagem física proposta</h2>
+            <p>Visão de cima: ESP32 na protoboard, jumpers na ponte H e fios chegando aos quatro motores.</p>
+          </div>
+          <div class="mode-chip" id="modeChip">PARADO</div>
+        </header>
+
+        <div class="pan-hint" id="panHint" aria-hidden="true">
+          <span>Deslize para acompanhar ESP32 → ponte H → M1–M4</span>
+          <svg viewBox="0 0 32 16"><path d="M1 8h29M24 2l6 6-6 6"/></svg>
+        </div>
+        <div class="diagram-scroll" id="diagramScroll" tabindex="0" aria-label="Montagem física proposta; deslize horizontalmente para acompanhar a ESP32 na protoboard, a ponte H e os quatro motores DC">
+          <svg class="wiring-diagram physical-diagram" viewBox="0 0 1560 840" role="img" aria-labelledby="diagramTitle diagramDesc">
+            <title id="diagramTitle">ESP32 montada na protoboard e ligada por jumpers à ponte H, quatro motores DC e módulo relé</title>
+            <desc id="diagramDesc">A ESP32 ocupa o centro da protoboard. Seis jumpers seguem dos GPIOs até uma ponte H L298N provisória. As saídas da ponte H chegam aos quatro motores DC, ligados em dois pares. Dois jumpers adicionais controlam o módulo relé para a bomba e o MS-129BT.</desc>
+            <defs>
+              <pattern id="breadboardHoles" width="22" height="22" patternUnits="userSpaceOnUse">
+                <circle cx="11" cy="11" r="3.2" fill="#888e87"/><circle cx="10.4" cy="10.4" r="1.25" fill="#343a36"/>
+              </pattern>
+              <filter id="partShadow" x="-20%" y="-20%" width="140%" height="160%">
+                <feDropShadow dx="0" dy="6" stdDeviation="6" flood-color="#24322c" flood-opacity=".22"/>
+              </filter>
+              <filter id="activeGlow" x="-40%" y="-40%" width="180%" height="180%">
+                <feGaussianBlur stdDeviation="5" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+              </filter>
+            </defs>
+
+            <rect width="1560" height="840" class="bench-mat"/>
+            <text x="38" y="40" class="view-label">VISÃO DE CIMA · OS FIOS TERMINAM NOS PINOS E BORNES REAIS</text>
+
+            <g class="camera-module physical-camera" filter="url(#partShadow)">
+              <rect x="45" y="58" width="230" height="72" rx="8"/>
+              <rect x="58" y="69" width="48" height="48" rx="3" class="camera-board"/>
+              <circle cx="82" cy="93" r="17" class="camera-lens"/><circle cx="82" cy="93" r="7" class="camera-glass"/>
+              <text x="120" y="84" class="component-name">ESP32-CAM</text>
+              <text x="120" y="104" class="component-note">separada · comunica por Wi-Fi</text>
+              <text x="120" y="121" class="component-meta" id="cameraMetric">aguardando quadros</text>
+            </g>
+            <path class="wire network-wire" d="M275 94H520V175"/>
+
+            <g class="breadboard" filter="url(#partShadow)">
+              <rect x="45" y="155" width="660" height="640" rx="16" class="breadboard-shell"/>
+              <rect x="74" y="184" width="602" height="64" rx="8" class="breadboard-field"/>
+              <rect x="74" y="272" width="602" height="188" rx="7" fill="url(#breadboardHoles)"/>
+              <rect x="74" y="490" width="602" height="188" rx="7" fill="url(#breadboardHoles)"/>
+              <rect x="74" y="702" width="602" height="64" rx="8" class="breadboard-field"/>
+              <path class="rail-red" d="M96 202H654M96 720H654"/><path class="rail-blue" d="M96 228H654M96 746H654"/>
+              <rect x="74" y="463" width="602" height="24" class="breadboard-trench"/>
+              <text x="92" y="177" class="board-label">PROTOBOARD · SOMENTE LÓGICA / SINAIS</text>
+              <text x="86" y="207" class="rail-mark positive">+</text><text x="86" y="233" class="rail-mark negative">−</text>
+              <text x="86" y="725" class="rail-mark positive">+</text><text x="86" y="751" class="rail-mark negative">−</text>
+            </g>
+
+            <g class="estop-switch" filter="url(#partShadow)">
+              <rect x="102" y="568" width="106" height="104" rx="8"/>
+              <circle cx="155" cy="615" r="29"/><circle cx="155" cy="615" r="19"/>
+              <text x="155" y="658" text-anchor="middle">EMERGÊNCIA</text>
+            </g>
+
+            <g class="esp-board physical-esp" filter="url(#partShadow)">
+              <rect x="252" y="250" width="202" height="390" rx="9" class="esp-pcb"/>
+              <rect x="302" y="264" width="103" height="68" rx="4" class="esp-antenna"/>
+              <path d="M314 277h78M314 289h78M314 301h78M314 313h78" class="antenna-lines"/>
+              <rect x="307" y="365" width="94" height="88" rx="6" class="chip"/>
+              <text x="354" y="402" text-anchor="middle" class="chip-label">ESP32</text>
+              <text x="354" y="424" text-anchor="middle" class="chip-small">DEVKIT V1</text>
+              <rect x="319" y="584" width="70" height="45" rx="5" class="usb-port"/>
+              <text x="354" y="610" text-anchor="middle" class="usb-label">USB</text>
+
+              <g class="pin left-pin"><circle cx="252" cy="358" r="8"/><text x="268" y="362">GPIO 32</text></g>
+              <g class="pin left-pin"><circle cx="252" cy="414" r="8"/><text x="268" y="418">GPIO 25</text></g>
+              <g class="pin left-pin"><circle cx="252" cy="442" r="8"/><text x="268" y="446">GPIO 26</text></g>
+              <g class="pin left-pin"><circle cx="252" cy="526" r="8"/><text x="268" y="530">GND</text></g>
+              <g class="pin left-pin"><circle cx="252" cy="610" r="8"/><text x="268" y="614">VIN 5V</text></g>
+
+              <g class="pin right-pin"><circle cx="454" cy="302" r="8"/><text x="438" y="306" text-anchor="end">GPIO 23</text></g>
+              <g class="pin right-pin"><circle cx="454" cy="330" r="8"/><text x="438" y="334" text-anchor="end">GPIO 22</text></g>
+              <g class="pin right-pin"><circle cx="454" cy="386" r="8"/><text x="438" y="390" text-anchor="end">GPIO 19</text></g>
+              <g class="pin right-pin"><circle cx="454" cy="414" r="8"/><text x="438" y="418" text-anchor="end">GPIO 18</text></g>
+              <g class="pin right-pin"><circle cx="454" cy="470" r="8"/><text x="438" y="474" text-anchor="end">GPIO 17</text></g>
+              <g class="pin right-pin"><circle cx="454" cy="498" r="8"/><text x="438" y="502" text-anchor="end">GPIO 16</text></g>
+            </g>
+
+            <g class="wire-stack" aria-hidden="true">
+              <path class="wire jumper wire-gpio23 left-signal" d="M454 302H610V272H800"/>
+              <path class="wire jumper wire-gpio18 left-signal" d="M454 414H590V300H800"/>
+              <path class="wire jumper wire-gpio19 left-signal" d="M454 386H570V328H800"/>
+              <path class="wire jumper wire-gpio22 right-signal" d="M454 330H630V384H800"/>
+              <path class="wire jumper wire-gpio16 right-signal" d="M454 498H650V412H800"/>
+              <path class="wire jumper wire-gpio17 right-signal" d="M454 470H670V440H800"/>
+              <path class="wire jumper wire-gpio25 pump-signal" d="M252 414H225V690H755V658H790"/>
+              <path class="wire jumper wire-gpio26 sound-signal" d="M252 442H205V675H735V684H790"/>
+              <path class="wire power-logic" d="M252 610H175V720H770V606H790"/>
+              <path class="wire power-logic" d="M720 720V540H970V490"/>
+              <path class="wire ground-logic" d="M252 526H155V746H750V632H790"/>
+              <path class="wire estop-signal" d="M252 358H222V590H208"/>
+              <path class="wire ground-logic" d="M102 640H86V746"/>
+
+              <path class="wire pending-wire" d="M842 108H742V490H842"/>
+              <path class="wire ground-logic" d="M906 108H722V510H906V490"/>
+              <path class="wire ground-logic" d="M770 746H706V530H906V490"/>
+
+              <path class="wire motor-positive left-output" d="M1030 230H1072V152H1132"/>
+              <path class="wire motor-negative left-output" d="M1030 252H1090V174H1132"/>
+              <path class="wire motor-positive left-output" d="M1072 230V280H1332V152"/>
+              <path class="wire motor-negative left-output" d="M1090 252V302H1350V174H1332"/>
+              <path class="wire motor-positive right-output" d="M1030 356H1072V392H1132"/>
+              <path class="wire motor-negative right-output" d="M1030 378H1090V414H1132"/>
+              <path class="wire motor-positive right-output" d="M1072 392V520H1332V392"/>
+              <path class="wire motor-negative right-output" d="M1090 414V542H1350V414H1332"/>
+
+              <path class="wire load-wire pump-output" d="M1030 618H1090V680H1130"/>
+              <path class="wire load-wire sound-output" d="M1030 666H1288V680H1325"/>
+            </g>
+
+            <g class="power-module" filter="url(#partShadow)">
+              <rect x="770" y="48" width="190" height="70" rx="9"/>
+              <text x="790" y="73" class="component-name">FONTE DOS MOTORES</text>
+              <text x="790" y="94" class="component-warning">PROVISÓRIA · medir antes</text>
+              <circle cx="842" cy="108" r="6" class="terminal-positive"/><circle cx="906" cy="108" r="6" class="terminal-negative"/>
+              <text x="828" y="112" text-anchor="end" class="terminal-label">+VM</text><text x="920" y="112" class="terminal-label">GND</text>
+            </g>
+
+            <g class="driver-board physical-driver" id="driverBoard" filter="url(#partShadow)">
+              <rect x="790" y="170" width="240" height="330" rx="10" class="driver-pcb"/>
+              <text x="910" y="198" text-anchor="middle" class="board-title-light">PONTE H · L298N PROVISÓRIA</text>
+              <text x="910" y="216" text-anchor="middle" class="board-subtitle-light">substituir se a corrente exigir</text>
+              <rect x="868" y="246" width="84" height="146" rx="5" class="driver-chip"/>
+              <path d="M880 258v122M892 258v122M904 258v122M916 258v122M928 258v122M940 258v122" class="heatsink-lines"/>
+              <g class="driver-channel left-channel">
+                <rect x="798" y="254" width="54" height="91" rx="5"/>
+                <text x="825" y="242" text-anchor="middle" class="channel-name">ESQ.</text>
+                <circle cx="800" cy="272" r="6"/><text x="812" y="276">ENA</text>
+                <circle cx="800" cy="300" r="6"/><text x="812" y="304">IN1</text>
+                <circle cx="800" cy="328" r="6"/><text x="812" y="332">IN2</text>
+              </g>
+              <g class="driver-channel right-channel">
+                <rect x="798" y="366" width="54" height="91" rx="5"/>
+                <text x="825" y="358" text-anchor="middle" class="channel-name">DIR.</text>
+                <circle cx="800" cy="384" r="6"/><text x="812" y="388">ENB</text>
+                <circle cx="800" cy="412" r="6"/><text x="812" y="416">IN3</text>
+                <circle cx="800" cy="440" r="6"/><text x="812" y="444">IN4</text>
+              </g>
+              <g class="motor-terminals">
+                <circle cx="1030" cy="230" r="7"/><circle cx="1030" cy="252" r="7"/>
+                <circle cx="1030" cy="356" r="7"/><circle cx="1030" cy="378" r="7"/>
+                <text x="1017" y="235" text-anchor="end">OUT1</text><text x="1017" y="257" text-anchor="end">OUT2</text>
+                <text x="1017" y="361" text-anchor="end">OUT3</text><text x="1017" y="383" text-anchor="end">OUT4</text>
+              </g>
+              <g class="driver-power">
+                <circle cx="842" cy="490" r="7"/><circle cx="906" cy="490" r="7"/><circle cx="970" cy="490" r="7"/>
+                <text x="842" y="474" text-anchor="middle">VMOTOR</text><text x="906" y="474" text-anchor="middle">GND</text><text x="970" y="474" text-anchor="middle">5V LOG.</text>
+              </g>
+              <text x="910" y="148" text-anchor="middle" class="component-warning">MOTORES NÃO PASSAM PELA PROTOBOARD</text>
+              <text x="910" y="420" text-anchor="middle" class="channel-value" id="leftChannelValue">ESQ. 0% · parado</text>
+              <text x="910" y="440" text-anchor="middle" class="channel-value" id="rightChannelValue">DIR. 0% · parado</text>
+            </g>
+
+            <g class="relay-board physical-relay" id="relayBoard" filter="url(#partShadow)">
+              <rect x="790" y="565" width="240" height="184" rx="9" class="relay-pcb"/>
+              <text x="910" y="590" text-anchor="middle" class="board-title-light">RELÉ 2 CANAIS · 5 V</text>
+              <g class="relay-inputs">
+                <circle cx="790" cy="606" r="7"/><text x="778" y="610" text-anchor="end">VCC</text>
+                <circle cx="790" cy="632" r="7"/><text x="778" y="636" text-anchor="end">GND</text>
+                <circle cx="790" cy="658" r="7"/><text x="778" y="662" text-anchor="end">IN1 · GPIO25</text>
+                <circle cx="790" cy="684" r="7"/><text x="778" y="688" text-anchor="end">IN2 · GPIO26</text>
+              </g>
+              <g class="relay-channel" id="pumpRelay"><rect x="822" y="624" width="74" height="76" rx="5"/><text x="859" y="651" text-anchor="middle">CH1</text><text x="859" y="679" text-anchor="middle" class="relay-state">OFF</text></g>
+              <g class="relay-channel" id="soundRelay"><rect x="916" y="624" width="74" height="76" rx="5"/><text x="953" y="651" text-anchor="middle">CH2</text><text x="953" y="679" text-anchor="middle" class="relay-state">OFF</text></g>
+              <circle cx="1030" cy="618" r="7"/><circle cx="1030" cy="666" r="7"/>
+              <text x="1016" y="622" text-anchor="end" class="relay-pin-label">NO1</text><text x="1016" y="670" text-anchor="end" class="relay-pin-label">NO2</text>
+              <text x="910" y="727" text-anchor="middle" class="board-subtitle-light">potência das cargas ainda pendente</text>
+            </g>
+
+            <g class="motor-unit physical-motor" id="motorM1" data-motion="stopped" transform="translate(1132 92)">
+              <rect width="184" height="130" rx="10" class="motor-card"/><circle cx="0" cy="60" r="6" class="terminal-positive"/><circle cx="0" cy="82" r="6" class="terminal-negative"/>
+              <rect x="18" y="42" width="82" height="50" rx="8" class="motor-case"/><rect x="91" y="49" width="40" height="36" rx="8" class="motor-can"/><path d="M131 67h16" class="motor-shaft"/>
+              <g class="motor-wheel-position" transform="translate(151 67)"><g class="motor-rotor"><circle r="31" class="tire"/><circle r="17" class="hub"/><path d="M-13 0H13M0-13V13M-9-9 9 9M9-9-9 9"/></g></g>
+              <text x="16" y="24" class="motor-name">M1 · DIANTEIRO ESQ.</text><text x="16" y="116" class="motor-value" id="m1Value">0% · 0 rpm</text>
+            </g>
+            <g class="motor-unit physical-motor" id="motorM2" data-motion="stopped" transform="translate(1332 92)">
+              <rect width="184" height="130" rx="10" class="motor-card"/><circle cx="0" cy="60" r="6" class="terminal-positive"/><circle cx="0" cy="82" r="6" class="terminal-negative"/>
+              <rect x="18" y="42" width="82" height="50" rx="8" class="motor-case"/><rect x="91" y="49" width="40" height="36" rx="8" class="motor-can"/><path d="M131 67h16" class="motor-shaft"/>
+              <g class="motor-wheel-position" transform="translate(151 67)"><g class="motor-rotor"><circle r="31" class="tire"/><circle r="17" class="hub"/><path d="M-13 0H13M0-13V13M-9-9 9 9M9-9-9 9"/></g></g>
+              <text x="16" y="24" class="motor-name">M2 · TRASEIRO ESQ.</text><text x="16" y="116" class="motor-value" id="m2Value">0% · 0 rpm</text>
+            </g>
+            <g class="motor-unit physical-motor" id="motorM3" data-motion="stopped" transform="translate(1132 332)">
+              <rect width="184" height="130" rx="10" class="motor-card"/><circle cx="0" cy="60" r="6" class="terminal-positive"/><circle cx="0" cy="82" r="6" class="terminal-negative"/>
+              <rect x="18" y="42" width="82" height="50" rx="8" class="motor-case"/><rect x="91" y="49" width="40" height="36" rx="8" class="motor-can"/><path d="M131 67h16" class="motor-shaft"/>
+              <g class="motor-wheel-position" transform="translate(151 67)"><g class="motor-rotor"><circle r="31" class="tire"/><circle r="17" class="hub"/><path d="M-13 0H13M0-13V13M-9-9 9 9M9-9-9 9"/></g></g>
+              <text x="16" y="24" class="motor-name">M3 · DIANTEIRO DIR.</text><text x="16" y="116" class="motor-value" id="m3Value">0% · 0 rpm</text>
+            </g>
+            <g class="motor-unit physical-motor" id="motorM4" data-motion="stopped" transform="translate(1332 332)">
+              <rect width="184" height="130" rx="10" class="motor-card"/><circle cx="0" cy="60" r="6" class="terminal-positive"/><circle cx="0" cy="82" r="6" class="terminal-negative"/>
+              <rect x="18" y="42" width="82" height="50" rx="8" class="motor-case"/><rect x="91" y="49" width="40" height="36" rx="8" class="motor-can"/><path d="M131 67h16" class="motor-shaft"/>
+              <g class="motor-wheel-position" transform="translate(151 67)"><g class="motor-rotor"><circle r="31" class="tire"/><circle r="17" class="hub"/><path d="M-13 0H13M0-13V13M-9-9 9 9M9-9-9 9"/></g></g>
+              <text x="16" y="24" class="motor-name">M4 · TRASEIRO DIR.</text><text x="16" y="116" class="motor-value" id="m4Value">0% · 0 rpm</text>
+            </g>
+
+            <g class="load-unit pump-unit physical-load" id="pumpUnit" filter="url(#partShadow)">
+              <rect x="1130" y="605" width="180" height="140" rx="10"/>
+              <path class="pump-body" d="M1162 663h61v42h-61zM1223 672h31v14h-31zM1178 644h28v19h-28z"/>
+              <g class="water-drops" aria-hidden="true"><circle cx="1268" cy="676" r="6"/><circle cx="1284" cy="665" r="4"/><circle cx="1290" cy="686" r="5"/></g>
+              <text x="1150" y="633" class="component-name">BOMBA D'ÁGUA</text><text x="1150" y="730" class="component-meta" id="pumpValue">desligada</text>
+            </g>
+            <g class="load-unit sound-unit physical-load" id="soundUnit" filter="url(#partShadow)">
+              <rect x="1325" y="605" width="190" height="140" rx="10"/>
+              <path class="speaker" d="M1360 664h22l27-22v70l-27-21h-22z"/><path class="sound-wave" d="M1423 658q22 20 0 40M1437 647q38 31 0 62"/>
+              <text x="1345" y="633" class="component-name">MS-129BT</text><text x="1345" y="730" class="component-meta" id="soundValue">desligada</text>
+            </g>
+
+            <g class="wire-labels" aria-hidden="true">
+              <text x="624" y="261" class="label-gpio23">GPIO23 → ENA</text><text x="594" y="291" class="label-gpio18">GPIO18 → IN1</text><text x="575" y="319" class="label-gpio19">GPIO19 → IN2</text>
+              <text x="638" y="375" class="label-gpio22">GPIO22 → ENB</text><text x="654" y="403" class="label-gpio16">GPIO16 → IN3</text><text x="674" y="431" class="label-gpio17">GPIO17 → IN4</text>
+              <text x="334" y="690" class="label-gpio25">GPIO25 → IN1 DO RELÉ</text><text x="334" y="671" class="label-gpio26">GPIO26 → IN2 DO RELÉ</text>
+              <text x="1090" y="578" class="pending-label">CONTATOS DA BOMBA/SOM: FONTE A DEFINIR</text>
+            </g>
+          </svg>
+        </div>
+
+        <footer class="diagram-legend" aria-label="Legenda da montagem física">
+          <span><i class="legend-control"></i> jumper de GPIO</span>
+          <span><i class="legend-motor"></i> fios da ponte H aos motores</span>
+          <span><i class="legend-load"></i> saída dos relés</span>
+          <span><i class="legend-network"></i> Wi-Fi da ESP32-CAM</span>
+          <span><i class="legend-pending"></i> conexão provisória</span>
+        </footer>
+      </article>
+
+      <aside class="live-console" aria-labelledby="consoleTitle">
+        <header class="console-heading">
+          <div><h2 id="consoleTitle">Teste ao vivo</h2><p>Comande e veja fios e motores responderem.</p></div>
+          <button class="emergency-control" id="emergencyButton" type="button" aria-pressed="false">PARAR</button>
+        </header>
+
+        <div class="mode-selector" role="group" aria-label="Modo do robô">
+          <button type="button" data-mode="PARADO" aria-pressed="true">Parado</button>
+          <button type="button" data-mode="MANUAL" aria-pressed="false">Manual</button>
+          <button type="button" data-mode="AUTONOMO" aria-pressed="false">Autônomo</button>
+        </div>
+
+        <section class="speed-bank" aria-label="Velocidade dos quatro motores">
+          <div class="speed-bank-heading"><h3>Velocidade individual</h3><small id="speedSource">estimada pelo comando</small></div>
+          <div class="speed-row"><span>M1</span><div><i id="m1Bar"></i></div><strong id="m1Speed">0,0 rad/s</strong></div>
+          <div class="speed-row"><span>M2</span><div><i id="m2Bar"></i></div><strong id="m2Speed">0,0 rad/s</strong></div>
+          <div class="speed-row"><span>M3</span><div><i id="m3Bar"></i></div><strong id="m3Speed">0,0 rad/s</strong></div>
+          <div class="speed-row"><span>M4</span><div><i id="m4Bar"></i></div><strong id="m4Speed">0,0 rad/s</strong></div>
+        </section>
+
+        <section class="manual-controls" aria-label="Direção manual">
+          <div class="direction-pad">
+            <button type="button" class="drive-button forward" data-drive="forward" aria-label="Frente"><svg viewBox="0 0 24 24"><path d="m5 15 7-7 7 7"/></svg><kbd>W</kbd></button>
+            <button type="button" class="drive-button left" data-drive="left" aria-label="Esquerda"><svg viewBox="0 0 24 24"><path d="m15 5-7 7 7 7"/></svg><kbd>A</kbd></button>
+            <button type="button" class="stop-button" id="stopButton">STOP</button>
+            <button type="button" class="drive-button right" data-drive="right" aria-label="Direita"><svg viewBox="0 0 24 24"><path d="m9 5 7 7-7 7"/></svg><kbd>D</kbd></button>
+            <button type="button" class="drive-button backward" data-drive="backward" aria-label="Ré"><svg viewBox="0 0 24 24"><path d="m5 9 7 7 7-7"/></svg><kbd>S</kbd></button>
+          </div>
+          <label class="power-slider" for="powerSlider"><span>Potência do teste <output id="powerOutput">45%</output></span><input id="powerSlider" type="range" min="15" max="100" value="45" step="5"></label>
+        </section>
+
+        <div class="actuator-controls">
+          <button type="button" id="pumpButton"><svg viewBox="0 0 24 24"><path d="M12 3s6 6.3 6 11a6 6 0 0 1-12 0c0-4.7 6-11 6-11Z"/></svg><span><strong>Bomba</strong><small id="pumpStatus">pulso de 3 s</small></span></button>
+          <button type="button" id="soundButton" aria-pressed="false"><svg viewBox="0 0 24 24"><path d="M5 10v4h4l5 4V6l-5 4H5Z"/><path d="M17 9a4 4 0 0 1 0 6"/></svg><span><strong>MS-129BT</strong><small id="soundStatus">desligada</small></span></button>
+        </div>
+
+        <div class="vision-readout">
+          <span>ESP32-CAM</span>
+          <strong id="visionValues">frente 148 · E 52 · D 52 cm</strong>
+          <small id="visionSource">fonte: câmera sintética</small>
+        </div>
+
+        <div class="safety-readout" id="safetyReadout" data-level="safe">
+          <strong id="systemState">PARADO</strong>
+          <span id="safetyReason">Modo seguro selecionado</span>
+        </div>
+      </aside>
+    </section>
+
+    <section class="truth-panel" id="como-usar" aria-labelledby="truthTitle">
+      <div><h2 id="truthTitle">O que este desenho já mostra</h2><p>Agora você vê a ESP32 encaixada na protoboard, cada GPIO saindo por um jumper, a ponte H recebendo os sinais e OUT1–OUT4 chegando aos terminais dos quatro motores. O L298N aparece como modelo provisório para tornar a montagem visível; o driver definitivo ainda depende da corrente medida.</p></div>
+      <div class="truth-warning"><strong>Não leve a parte vermelha para o físico ainda.</strong><span>Os motores não passam pela protoboard nem recebem energia da ESP32. A fonte de motor, o driver definitivo e a alimentação da bomba precisam ser confirmados depois das medições.</span></div>
+    </section>
+  </main>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script src="/bancada.js"></script>
+</body>
+</html>

@@ -1,0 +1,61 @@
+{
+  "version": 1,
+  "author": "Grupo 2",
+  "editor": "wokwi",
+  "parts": [
+    { "type": "wokwi-esp32-devkit-v1", "id": "esp", "top": 10, "left": 10, "attrs": {} },
+    { "type": "wokwi-text", "id": "visionNote", "top": -125, "left": 215, "attrs": { "text": "ESP32-CAM + visão\nfora do Wokwi" } },
+    { "type": "wokwi-text", "id": "leftBank", "top": -155, "left": -175, "attrs": { "text": "M1 + M2 · lado esquerdo" } },
+    { "type": "wokwi-text", "id": "rightBank", "top": 45, "left": -175, "attrs": { "text": "M3 + M4 · lado direito" } },
+    { "type": "wokwi-relay-module", "id": "pumpRelay", "top": 190, "left": 300, "attrs": {} },
+    { "type": "wokwi-relay-module", "id": "soundRelay", "top": 310, "left": 300, "attrs": {} },
+    { "type": "wokwi-pushbutton", "id": "estop", "top": 340, "left": -125, "attrs": { "color": "red", "label": "E-STOP" } },
+    { "type": "wokwi-led", "id": "lf", "top": -115, "left": -165, "attrs": { "color": "green", "label": "L FWD" } },
+    { "type": "wokwi-led", "id": "lr", "top": -55, "left": -165, "attrs": { "color": "yellow", "label": "L REV" } },
+    { "type": "wokwi-led", "id": "lpwm", "top": 5, "left": -165, "attrs": { "color": "blue", "label": "L PWM" } },
+    { "type": "wokwi-led", "id": "rf", "top": 85, "left": -165, "attrs": { "color": "green", "label": "R FWD" } },
+    { "type": "wokwi-led", "id": "rr", "top": 145, "left": -165, "attrs": { "color": "yellow", "label": "R REV" } },
+    { "type": "wokwi-led", "id": "rpwm", "top": 205, "left": -165, "attrs": { "color": "blue", "label": "R PWM" } },
+    { "type": "wokwi-resistor", "id": "r1", "top": -105, "left": -95, "rotate": 90, "attrs": { "value": "220" } },
+    { "type": "wokwi-resistor", "id": "r2", "top": -45, "left": -95, "rotate": 90, "attrs": { "value": "220" } },
+    { "type": "wokwi-resistor", "id": "r3", "top": 15, "left": -95, "rotate": 90, "attrs": { "value": "220" } },
+    { "type": "wokwi-resistor", "id": "r4", "top": 95, "left": -95, "rotate": 90, "attrs": { "value": "220" } },
+    { "type": "wokwi-resistor", "id": "r5", "top": 155, "left": -95, "rotate": 90, "attrs": { "value": "220" } },
+    { "type": "wokwi-resistor", "id": "r6", "top": 215, "left": -95, "rotate": 90, "attrs": { "value": "220" } }
+  ],
+  "connections": [
+    [ "esp:TX0", "$serialMonitor:RX", "", [] ],
+    [ "esp:RX0", "$serialMonitor:TX", "", [] ],
+
+    [ "esp:D18", "lf:A", "green", [] ],
+    [ "lf:C", "r1:1", "green", [] ],
+    [ "r1:2", "esp:GND.1", "black", [] ],
+    [ "esp:D19", "lr:A", "yellow", [] ],
+    [ "lr:C", "r2:1", "yellow", [] ],
+    [ "r2:2", "esp:GND.1", "black", [] ],
+    [ "esp:D23", "lpwm:A", "blue", [] ],
+    [ "lpwm:C", "r3:1", "blue", [] ],
+    [ "r3:2", "esp:GND.1", "black", [] ],
+
+    [ "esp:D16", "rf:A", "green", [] ],
+    [ "rf:C", "r4:1", "green", [] ],
+    [ "r4:2", "esp:GND.1", "black", [] ],
+    [ "esp:D17", "rr:A", "yellow", [] ],
+    [ "rr:C", "r5:1", "yellow", [] ],
+    [ "r5:2", "esp:GND.1", "black", [] ],
+    [ "esp:D22", "rpwm:A", "blue", [] ],
+    [ "rpwm:C", "r6:1", "blue", [] ],
+    [ "r6:2", "esp:GND.1", "black", [] ],
+
+    [ "esp:D25", "pumpRelay:IN", "cyan", [] ],
+    [ "esp:5V", "pumpRelay:VCC", "red", [] ],
+    [ "esp:GND.2", "pumpRelay:GND", "black", [] ],
+    [ "esp:D26", "soundRelay:IN", "cyan", [] ],
+    [ "esp:5V", "soundRelay:VCC", "red", [] ],
+    [ "esp:GND.2", "soundRelay:GND", "black", [] ],
+
+    [ "esp:D32", "estop:1.l", "red", [] ],
+    [ "estop:2.l", "esp:GND.2", "black", [] ]
+  ],
+  "dependencies": {}
+}

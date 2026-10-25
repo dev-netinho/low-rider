@@ -1,0 +1,15 @@
+__pycache__/
+*.py[cod]
+firmware/.pio/
+firmware/include/secrets.h
+firmware/include/secrets*.h
+firmware/**/build*/
+firmware/**/.pio/
+*.rollback
+*.rollback.*
+*.ino.rollback
+*.bin
+*.elf
+*.map
+runtime_config.json
+runtime_config.tmp

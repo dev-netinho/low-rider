@@ -1,0 +1,498 @@
+#VRML_SIM R2025a utf8
+
+WorldInfo {
+  info [
+    "Gêmeo digital 3D do Robô de Logística e Fuga — Grupo 2"
+    "Navegação autônoma baseada exclusivamente na câmera frontal"
+  ]
+  title "Grupo 2 — carro 4x4 com visão monocular"
+  basicTimeStep 32
+  coordinateSystem "ENU"
+}
+Viewpoint {
+  orientation -0.203368 0.806638 0.554956 0.852852
+  position -3.3 -0.7 1.3
+  follow "Carro 4x4 Grupo 2"
+  followType "Tracking Shot"
+  followSmoothness 0.08
+}
+Background {
+  skyColor [
+    0.78 0.82 0.78
+  ]
+}
+DirectionalLight {
+  direction -0.4 -0.3 -1
+  intensity 1.4
+  ambientIntensity 0.55
+}
+
+DEF FLOOR Solid {
+  translation 0 0 -0.025
+  children [
+    Shape {
+      appearance PBRAppearance {
+        baseColor 0.16 0.20 0.18
+        roughness 0.92
+        metalness 0
+      }
+      geometry Box {
+        size 6 4.2 0.05
+      }
+    }
+  ]
+  name "piso escuro para segmentação visual"
+  boundingObject Box {
+    size 6 4.2 0.05
+  }
+}
+
+DEF WALL_LONG Solid {
+  translation -0.45 0.65 0.25
+  children [
+    DEF WALL_SHAPE Shape {
+      appearance PBRAppearance {
+        baseColor 0.78 0.81 0.77
+        roughness 0.86
+        metalness 0
+      }
+      geometry Box {
+        size 4.7 0.08 0.5
+      }
+    }
+  ]
+  name "parede esquerda do corredor"
+  boundingObject Box {
+    size 4.7 0.08 0.5
+  }
+}
+Solid {
+  translation -1.05 -0.65 0.25
+  children [
+    Shape {
+      appearance PBRAppearance {
+        baseColor 0.78 0.81 0.77
+        roughness 0.86
+        metalness 0
+      }
+      geometry Box {
+        size 3.5 0.08 0.5
+      }
+    }
+  ]
+  name "parede direita antes da curva"
+  boundingObject Box {
+    size 3.5 0.08 0.5
+  }
+}
+Solid {
+  translation 1.31 0.15 0.25
+  children [
+    Shape {
+      appearance PBRAppearance {
+        baseColor 0.78 0.81 0.77
+        roughness 0.86
+        metalness 0
+      }
+      geometry Box {
+        size 0.08 1.08 0.5
+      }
+    }
+  ]
+  name "parede frontal com abertura à direita"
+  boundingObject Box {
+    size 0.08 1.08 0.5
+  }
+}
+Solid {
+  translation 0.69 -1.3 0.25
+  children [
+    Shape {
+      appearance PBRAppearance {
+        baseColor 0.78 0.81 0.77
+        roughness 0.86
+        metalness 0
+      }
+      geometry Box {
+        size 0.08 1.3 0.5
+      }
+    }
+  ]
+  name "parede externa depois da curva"
+  boundingObject Box {
+    size 0.08 1.3 0.5
+  }
+}
+Solid {
+  translation 1.31 -1.55 0.25
+  children [
+    Shape {
+      appearance PBRAppearance {
+        baseColor 0.78 0.81 0.77
+        roughness 0.86
+        metalness 0
+      }
+      geometry Box {
+        size 0.08 1.85 0.5
+      }
+    }
+  ]
+  name "parede interna depois da curva"
+  boundingObject Box {
+    size 0.08 1.85 0.5
+  }
+}
+
+Solid {
+  translation 1.0 -2.0 0.16
+  children [
+    Shape {
+      appearance PBRAppearance {
+        baseColor 0.82 0.12 0.05
+        roughness 0.7
+        metalness 0
+      }
+      geometry Cylinder {
+        radius 0.13
+        height 0.32
+      }
+    }
+  ]
+  name "alvo para demonstração da bomba"
+  boundingObject Cylinder {
+    radius 0.13
+    height 0.32
+  }
+}
+
+DEF ROBO_4X4 Robot {
+  translation -2.35 0 0.034
+  supervisor TRUE
+  controller "carro_vision"
+  children [
+    Pose {
+      translation 0 0 0.065
+      children [
+        DEF CHASSIS_VISUAL Shape {
+          appearance PBRAppearance {
+            baseColor 0.09 0.17 0.14
+            roughness 0.72
+            metalness 0.08
+          }
+          geometry Box {
+            size 0.29 0.18 0.055
+          }
+        }
+      ]
+    }
+    Pose {
+      translation -0.035 0 0.115
+      children [
+        Shape {
+          appearance PBRAppearance {
+            baseColor 0.18 0.25 0.22
+            roughness 0.68
+            metalness 0.1
+          }
+          geometry Box {
+            size 0.17 0.15 0.055
+          }
+        }
+      ]
+    }
+    Pose {
+      translation 0.095 0 0.103
+      children [
+        Shape {
+          appearance PBRAppearance {
+            baseColor 0.04 0.08 0.07
+            roughness 0.5
+            metalness 0.05
+          }
+          geometry Box {
+            size 0.055 0.11 0.035
+          }
+        }
+      ]
+    }
+
+    Pose {
+      translation 0.105 0.083 0.025
+      children [
+        DEF MOTOR_CASE Shape {
+          appearance PBRAppearance {
+            baseColor 0.95 0.68 0.03
+            roughness 0.72
+            metalness 0
+          }
+          geometry Box {
+            size 0.065 0.028 0.035
+          }
+        }
+      ]
+    }
+    Pose {
+      translation -0.105 0.083 0.025
+      children [ USE MOTOR_CASE ]
+    }
+    Pose {
+      translation 0.105 -0.083 0.025
+      children [ USE MOTOR_CASE ]
+    }
+    Pose {
+      translation -0.105 -0.083 0.025
+      children [ USE MOTOR_CASE ]
+    }
+
+    HingeJoint {
+      jointParameters HingeJointParameters {
+        axis 0 1 0
+        anchor 0.105 0.108 0
+        dampingConstant 0.02
+      }
+      device [
+        RotationalMotor {
+          name "motor dianteiro esquerdo"
+          maxVelocity 30
+          maxTorque 1.2
+        }
+        PositionSensor {
+          name "encoder dianteiro esquerdo"
+        }
+      ]
+      endPoint Solid {
+        translation 0.105 0.108 0
+        children [
+          DEF WHEEL_VISUAL Group {
+            children [
+              Shape {
+                appearance PBRAppearance {
+                  baseColor 0.025 0.028 0.026
+                  roughness 0.92
+                  metalness 0
+                }
+                geometry Cylinder {
+                  height 0.026
+                  radius 0.0325
+                  subdivision 32
+                }
+              }
+              Shape {
+                appearance PBRAppearance {
+                  baseColor 0.98 0.72 0.02
+                  roughness 0.66
+                  metalness 0
+                }
+                geometry Cylinder {
+                  height 0.028
+                  radius 0.017
+                  subdivision 24
+                }
+              }
+              Pose {
+                translation 0.009 0.015 0
+                children [
+                  DEF WHEEL_INDEX_MARK Shape {
+                    appearance PBRAppearance {
+                      baseColor 0.08 0.12 0.10
+                      roughness 0.78
+                      metalness 0
+                    }
+                    geometry Box {
+                      size 0.018 0.003 0.004
+                    }
+                  }
+                ]
+              }
+              Pose {
+                translation 0.009 -0.015 0
+                children [ USE WHEEL_INDEX_MARK ]
+              }
+            ]
+          }
+        ]
+        name "roda dianteira esquerda 65 mm"
+        boundingObject Cylinder {
+          height 0.026
+          radius 0.0325
+        }
+        physics Physics {
+          density -1
+          mass 0.055
+        }
+      }
+    }
+    HingeJoint {
+      jointParameters HingeJointParameters {
+        axis 0 1 0
+        anchor -0.105 0.108 0
+        dampingConstant 0.02
+      }
+      device [
+        RotationalMotor {
+          name "motor traseiro esquerdo"
+          maxVelocity 30
+          maxTorque 1.2
+        }
+        PositionSensor {
+          name "encoder traseiro esquerdo"
+        }
+      ]
+      endPoint Solid {
+        translation -0.105 0.108 0
+        children [ USE WHEEL_VISUAL ]
+        name "roda traseira esquerda 65 mm"
+        boundingObject Cylinder {
+          height 0.026
+          radius 0.0325
+        }
+        physics Physics {
+          density -1
+          mass 0.055
+        }
+      }
+    }
+    HingeJoint {
+      jointParameters HingeJointParameters {
+        axis 0 1 0
+        anchor 0.105 -0.108 0
+        dampingConstant 0.02
+      }
+      device [
+        RotationalMotor {
+          name "motor dianteiro direito"
+          maxVelocity 30
+          maxTorque 1.2
+        }
+        PositionSensor {
+          name "encoder dianteiro direito"
+        }
+      ]
+      endPoint Solid {
+        translation 0.105 -0.108 0
+        children [ USE WHEEL_VISUAL ]
+        name "roda dianteira direita 65 mm"
+        boundingObject Cylinder {
+          height 0.026
+          radius 0.0325
+        }
+        physics Physics {
+          density -1
+          mass 0.055
+        }
+      }
+    }
+    HingeJoint {
+      jointParameters HingeJointParameters {
+        axis 0 1 0
+        anchor -0.105 -0.108 0
+        dampingConstant 0.02
+      }
+      device [
+        RotationalMotor {
+          name "motor traseiro direito"
+          maxVelocity 30
+          maxTorque 1.2
+        }
+        PositionSensor {
+          name "encoder traseiro direito"
+        }
+      ]
+      endPoint Solid {
+        translation -0.105 -0.108 0
+        children [ USE WHEEL_VISUAL ]
+        name "roda traseira direita 65 mm"
+        boundingObject Cylinder {
+          height 0.026
+          radius 0.0325
+        }
+        physics Physics {
+          density -1
+          mass 0.055
+        }
+      }
+    }
+
+    Pose {
+      translation 0.13 0 0.13
+      rotation 0 0 1 -1.5708
+      children [
+        Camera {
+          rotation 1 0 0 1.3508
+          name "ESP32-CAM (visao do robo - pode fechar)"
+          fieldOfView 1.15
+          width 320
+          height 240
+          near 0.01
+          far 6
+          antiAliasing TRUE
+          noise 0.01
+        }
+      ]
+    }
+    Pose {
+      translation 0.155 0 0.092
+      rotation 0 1 0 1.5708
+      children [
+        Shape {
+          appearance PBRAppearance {
+            baseColor 0.05 0.36 0.62
+            roughness 0.45
+            metalness 0.2
+          }
+          geometry Cylinder {
+            radius 0.009
+            height 0.045
+          }
+        }
+      ]
+    }
+    Pose {
+      translation -0.085 0 0.115
+      children [
+        Shape {
+          appearance PBRAppearance {
+            baseColor 0.12 0.42 0.68
+            roughness 0.55
+            metalness 0
+          }
+          geometry Cylinder {
+            radius 0.042
+            height 0.075
+          }
+        }
+      ]
+    }
+    Pose {
+      translation -0.085 -0.052 0.105
+      children [
+        Shape {
+          appearance PBRAppearance {
+            baseColor 0.06 0.06 0.065
+            roughness 0.4
+            metalness 0.15
+          }
+          geometry Box {
+            size 0.075 0.04 0.055
+          }
+        }
+      ]
+    }
+  ]
+  name "Carro 4x4 Grupo 2"
+  boundingObject Pose {
+    translation 0 0 0.065
+    children [
+      Box {
+        size 0.29 0.18 0.055
+      }
+    ]
+  }
+  physics Physics {
+    density -1
+    mass 1.35
+    centerOfMass [
+      -0.015 0 0.045
+    ]
+  }
+}

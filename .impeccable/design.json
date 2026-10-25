@@ -1,0 +1,71 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-23T10:36:49-03:00",
+  "title": "Design System: Centro de Comando — Bancada virtual",
+  "extensions": {
+    "colorMeta": {
+      "signal": { "role": "primary", "displayName": "Sinal ativo", "canonical": "#b7e44c" },
+      "jumper-gpio23": { "role": "secondary", "displayName": "Jumper GPIO23 → ENA", "canonical": "#246fc2" },
+      "jumper-gpio18": { "role": "secondary", "displayName": "Jumper GPIO18 → IN1", "canonical": "#e97824" },
+      "jumper-gpio19": { "role": "secondary", "displayName": "Jumper GPIO19 → IN2", "canonical": "#d1a500" },
+      "jumper-gpio22": { "role": "secondary", "displayName": "Jumper GPIO22 → ENB", "canonical": "#7658bd" },
+      "jumper-gpio16": { "role": "secondary", "displayName": "Jumper GPIO16 → IN3", "canonical": "#2b934f" },
+      "jumper-gpio17": { "role": "secondary", "displayName": "Jumper GPIO17 → IN4", "canonical": "#1c9c9a" },
+      "jumper-gpio25": { "role": "secondary", "displayName": "Jumper GPIO25 → relé IN1", "canonical": "#008cbd" },
+      "jumper-gpio26": { "role": "secondary", "displayName": "Jumper GPIO26 → relé IN2", "canonical": "#ba438b" },
+      "motor-positive": { "role": "secondary", "displayName": "Motor positivo · vermelho", "canonical": "#d64032" },
+      "motor-negative": { "role": "neutral", "displayName": "Motor negativo · preto", "canonical": "#27302c" },
+      "terminal-signal": { "role": "tertiary", "displayName": "Pino ou borne físico", "canonical": "#d8bd45" },
+      "load": { "role": "secondary", "displayName": "Carga auxiliar", "canonical": "#3e8ec9" },
+      "network": { "role": "secondary", "displayName": "Enlace de rede", "canonical": "#8c70d5" },
+      "pending": { "role": "tertiary", "displayName": "Alimentação provisória", "canonical": "#db4a30" },
+      "rail": { "role": "neutral", "displayName": "Trilho técnico", "canonical": "#20332c" },
+      "canvas": { "role": "neutral", "displayName": "Plano mineral", "canonical": "#d9ddd4" },
+      "paper": { "role": "neutral", "displayName": "Papel técnico", "canonical": "#f4f3ec" },
+      "ink": { "role": "neutral", "displayName": "Tinta principal", "canonical": "#18231f" }
+    },
+    "typographyMeta": {
+      "interface": { "displayName": "Interface", "purpose": "Comandos, orientação e explicações operacionais." },
+      "data": { "displayName": "Dados", "purpose": "GPIO, estados, rad/s, rpm e demais leituras técnicas." }
+    },
+    "shadows": [
+      { "name": "painel", "value": "0 14px 34px rgba(16, 27, 23, 0.14)", "purpose": "Separar a bancada principal do plano mineral." },
+      { "name": "barra-fixa", "value": "0 6px 18px rgba(16, 27, 23, 0.22)", "purpose": "Manter a barra crítica visualmente acima do conteúdo." }
+    ],
+    "motion": [
+      { "name": "estado-rapido", "value": "180ms ease-out", "purpose": "Mudanças de intensidade nos fios de sinal." },
+      { "name": "fluxo-sinal", "value": "650ms linear infinite", "purpose": "Indicar passagem de comando em uma conexão ativa." },
+      { "name": "rotacao-motor", "value": "var(--spin-duration, 1s) linear infinite", "purpose": "Relacionar visualmente comando e giro do motor." }
+    ],
+    "breakpoints": [
+      { "name": "compacto", "value": "1150px" },
+      { "name": "celular", "value": "760px" }
+    ]
+  },
+  "components": [],
+  "narrative": {
+    "northStar": "Bancada de instrumentação de campo",
+    "overview": "Uma vista superior vetorial da montagem real: protoboard e ESP32 dominam a primeira viewport, e o pan permite seguir cada jumper até pinos e bornes da ponte H ou do relé e, depois, até os atuadores. A rastreabilidade física e a telemetria textual têm prioridade sobre abstração e decoração.",
+    "keyCharacteristics": [
+      "Uma cor estável por jumper, acompanhada do par GPIO → pino",
+      "Fios de motor em pares vermelho/preto ligados a bornes visíveis",
+      "M1–M4 identificados e medidos individualmente",
+      "Alimentação provisória interrompida e explicitamente rotulada",
+      "Segurança acessível na primeira viewport"
+    ],
+    "rules": [
+      { "name": "Rastreabilidade física", "body": "Todo fio termina em um pino ou borne desenhado e nomeado; cada jumper conserva sua cor da GPIO ao destino.", "section": "components" },
+      { "name": "Par de motor", "body": "As saídas OUT1–OUT4 chegam a M1–M4 somente em pares vermelho/preto.", "section": "colors" },
+      { "name": "Incerteza visível", "body": "Alimentações ainda não dimensionadas usam traço interrompido e rótulo PROVISÓRIA ou PENDENTE.", "section": "colors" }
+    ],
+    "dos": [
+      "Manter protoboard e ESP32 como ponto inicial da leitura e permitir pan até ponte H, relés e atuadores.",
+      "Mostrar comando e medição numérica junto de cada motor.",
+      "Preservar texto, foco e estado mesmo quando a animação for reduzida."
+    ],
+    "donts": [
+      "Não apresentar a câmera como visão principal da montagem.",
+      "Não tratar alimentação de motor ou bomba como definitiva sem medições reais."
+    ]
+  }
+}

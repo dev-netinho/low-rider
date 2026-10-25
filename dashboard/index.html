@@ -1,0 +1,311 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#20332c">
+  <meta name="description" content="Centro de comando do gêmeo digital do Robô de Logística e Fuga do Grupo 2.">
+  <title>Grupo 2 · Centro de Comando</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <!--
+    THESIS: Um posto de operação que torna comando, resposta e segurança visíveis no mesmo instante; recusa o dashboard de cartões genéricos.
+    OWN-WORLD: Bancada de instrumentação em cinza mineral, verde profundo, papel técnico e laranja de segurança; linhas firmes, controles táteis e dados monoespaçados apenas onde medem.
+    STORY: O operador confirma o enlace, enxerga a percepção sintética, escolhe o modo, move o 4×4 e verifica imediatamente motores, atuadores e proteções.
+    FIRST VIEWPORT: Barra crítica no topo, visão ampla à esquerda, console manual à direita e telemetria contínua abaixo; a parada de emergência permanece sempre alcançável.
+    FORM: Console de ensaio de campo, primeira direção viável; seed fallback-operate-field-console-2026-09-22.
+    FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance
+  -->
+  <a class="skip-link" href="#controle">Ir para os controles</a>
+
+  <header class="topbar">
+    <div class="brand-block" aria-label="Identificação do sistema">
+      <svg class="brand-mark" viewBox="0 0 44 44" aria-hidden="true">
+        <path d="M6 29V15l16-9 16 9v14l-16 9L6 29Z" fill="none" stroke="currentColor" stroke-width="2.5"/>
+        <path d="M13 27V17l9-5 9 5v10l-9 5-9-5Z" fill="currentColor"/>
+        <path d="M18 22h8M22 18v8" stroke="#20332c" stroke-width="2"/>
+      </svg>
+      <div>
+        <h1>Centro de comando</h1>
+        <p>Robô de Logística e Fuga · Grupo 2</p>
+      </div>
+    </div>
+
+    <div class="topbar-status">
+      <a class="bench-link" href="/bancada">Ver conexões e motores</a>
+      <button class="network-settings-button" id="networkSettingsButton" type="button">Rede</button>
+      <div class="connection-pill" id="connectionPill" data-status="connecting" aria-live="polite" aria-atomic="true">
+        <span class="status-dot" aria-hidden="true"></span>
+        <span id="connectionText">Conectando ao painel</span>
+        <span class="connection-short" id="connectionShort" aria-hidden="true">…</span>
+      </div>
+      <time id="localClock" datetime="" aria-hidden="true">--:--:--</time>
+    </div>
+
+    <button class="emergency-button" id="emergencyButton" type="button" aria-pressed="false">
+      <span class="emergency-symbol" aria-hidden="true"></span>
+      <span><strong>PARADA</strong><small>emergência</small></span>
+    </button>
+  </header>
+
+  <main class="workspace">
+    <section class="operations" aria-label="Operação principal">
+      <article class="vision-stage" id="visionPanel" data-panel-content="autonomous" aria-labelledby="visionTitle">
+        <div class="stage-heading">
+          <div>
+            <h2 id="visionTitle">Percepção frontal</h2>
+            <p>Imagem da ESP32-CAM · a visão decide o modo autônomo</p>
+          </div>
+          <div class="stage-flags">
+            <span class="data-flag" id="cameraFps">FPS medido: não medido</span>
+            <span class="data-flag" id="cameraMaxGap">Maior intervalo: não medido</span>
+            <span class="data-flag" id="cameraLatency">Recebido → exibido: não medido</span>
+          </div>
+        </div>
+
+        <div class="camera-frame">
+          <img class="camera-feed" id="cameraFeed" alt="Imagem ao vivo da ESP32-CAM" hidden>
+          <canvas id="cameraCanvas" width="960" height="540" aria-label="Simulação visual da câmera frontal e detecção de obstáculos"></canvas>
+          <div class="camera-topline">
+            <span>CAM-01</span>
+            <span id="visionClock">T+000.0</span>
+            <span class="record-state" id="cameraRecordState"><i aria-hidden="true"></i> CÂMERA</span>
+          </div>
+          <div class="camera-freshness" id="cameraFreshness" data-state="connecting" aria-live="polite">
+            <strong id="cameraState">Conectando à câmera…</strong>
+            <span>JPEG recebido: <b id="cameraLastReceived">—</b></span>
+            <span>Frame exibido: <b id="cameraLastDisplayed">—</b></span>
+            <span id="cameraHubStatus">Hub: não medido</span>
+          </div>
+          <div class="target-readout" id="targetReadout" data-detected="true">
+            <span class="target-label">VISÃO · FRENTE</span>
+            <strong id="targetDistance">não medido</strong>
+            <small id="targetConfidence">aguardando visão real</small>
+          </div>
+          <div class="camera-statusline">
+            <span id="autonomousAction">Aguardando ativação</span>
+            <span id="poseReadout">X 0,00 · Y 0,00 · 000°</span>
+          </div>
+        </div>
+      </article>
+
+      <aside class="control-desk" id="controle" aria-labelledby="controlTitle">
+        <div class="control-heading">
+          <h2 id="controlTitle">Controle do chassi</h2>
+          <div class="control-state"><span class="mode-readout" id="modeReadout">PARADO</span><button class="standby-button" id="standbyButton" type="button">Parar</button></div>
+        </div>
+
+        <div class="mode-selector control-tabs" role="tablist" aria-label="Área de controle">
+          <button type="button" role="tab" data-mode="MANUAL" data-panel-tab="manual" aria-selected="true" aria-pressed="true">Manual</button>
+          <button type="button" role="tab" data-panel-tab="sound" aria-selected="false" aria-pressed="false">Caixa de som</button>
+          <button type="button" role="tab" data-mode="AUTONOMO" data-panel-tab="autonomous" aria-selected="false" aria-pressed="false">Autônomo</button>
+        </div>
+
+        <div class="tab-panel" id="manualPanel" data-panel="manual" role="tabpanel">
+          <div class="panel-intro"><span class="panel-kicker">PILOTAGEM</span><h3>Controle manual</h3><p>Segure uma direção para mover. <kbd>Espaço</kbd> para parar.</p></div>
+        <div class="drive-block">
+          <div class="drive-copy">
+            <h3>Direção diferencial</h3>
+            <p>Use os botões, setas ou WASD. Soltar o comando interrompe; Espaço aciona o freio.</p>
+          </div>
+
+          <div class="joystick-grid" role="group" aria-label="Joysticks manuais">
+            <div class="joystick-control">
+              <div class="joystick-label"><strong>Velocidade</strong><span id="throttleReadout">0%</span></div>
+              <div class="joystick" id="throttleJoystick" data-axis="throttle" role="slider" aria-label="Velocidade, vertical" aria-valuemin="-100" aria-valuemax="100" aria-valuenow="0" tabindex="0">
+                <div class="joystick-track"><button class="joystick-knob" type="button" tabindex="-1" aria-hidden="true"></button></div>
+                <span class="joystick-mark joystick-mark-top">FRENTE</span><span class="joystick-mark joystick-mark-bottom">RÉ</span>
+              </div>
+            </div>
+            <div class="joystick-control">
+              <div class="joystick-label"><strong>Direção</strong><span id="steeringReadout">0%</span></div>
+              <div class="joystick" id="steeringJoystick" data-axis="steering" role="slider" aria-label="Direção, horizontal" aria-valuemin="-100" aria-valuemax="100" aria-valuenow="0" tabindex="0">
+                <div class="joystick-track"><button class="joystick-knob" type="button" tabindex="-1" aria-hidden="true"></button></div>
+                <span class="joystick-mark joystick-mark-left">ESQ.</span><span class="joystick-mark joystick-mark-right">DIR.</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="direction-pad" role="group" aria-label="Direção manual alternativa por botões">
+            <button class="direction-button forward" type="button" data-drive="forward" aria-label="Mover para frente">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 15 7-7 7 7"/></svg><kbd>W</kbd>
+            </button>
+            <button class="direction-button left" type="button" data-drive="left" aria-label="Girar para a esquerda">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 5-7 7 7 7"/></svg><kbd>A</kbd>
+            </button>
+            <button class="stop-button" id="stopButton" type="button" aria-label="Parar motores">STOP</button>
+            <button class="direction-button right" type="button" data-drive="right" aria-label="Girar para a direita">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg><kbd>D</kbd>
+            </button>
+            <button class="direction-button backward" type="button" data-drive="backward" aria-label="Mover para trás">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 9 7 7 7-7"/></svg><kbd>S</kbd>
+            </button>
+          </div>
+
+          <label class="range-control" for="speedLimit">
+            <span>Limite de velocidade <output id="speedOutput" for="speedLimit">60%</output></span>
+            <input id="speedLimit" type="range" min="15" max="100" value="60" step="5">
+          </label>
+        </div>
+
+        <div class="action-bank manual-actions" aria-label="Atuadores auxiliares">
+          <button class="actuator-button pump" id="pumpButton" type="button">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3s6 6.3 6 11a6 6 0 0 1-12 0c0-4.7 6-11 6-11Z"/><path d="M9 15.5c.7 1.3 1.7 1.9 3 1.9"/></svg>
+            <span><strong>Dispersar água</strong><small id="pumpStatus">Pulso máximo de 3 s</small></span>
+            <i class="action-progress" aria-hidden="true"></i>
+          </button>
+        </div>
+        </div>
+
+        <div class="tab-panel" id="soundPanel" data-panel="sound" role="tabpanel" hidden>
+          <div class="panel-intro"><span class="panel-kicker">MS-129BT</span><h3>Caixa de som</h3><p>Comandos preparados para os relés da placa de áudio.</p></div>
+          <div class="sound-power-row"><button class="actuator-button sound" id="soundButton" type="button" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 10v4h4l5 4V6l-5 4H5Z"/><path d="M17 9a4 4 0 0 1 0 6M19 6a8 8 0 0 1 0 12"/></svg><span><strong>Alimentação</strong><small id="soundStatus">Desligada</small></span><i class="switch-indicator" aria-hidden="true"></i></button><span class="hardware-note">Relés ainda não conectados</span></div>
+          <div class="sound-grid" role="group" aria-label="Controles da caixa de som">
+            <button type="button" class="sound-command" data-sound-action="mode">MODE<small>rádio / Bluetooth</small></button>
+            <button type="button" class="sound-command" data-sound-action="previous">◀◀<small>anterior / volume −</small></button>
+            <button type="button" class="sound-command sound-command-main" data-sound-action="play">▶︎Ⅱ<small>pausar / SCAN</small></button>
+            <button type="button" class="sound-command" data-sound-action="next">▶▶<small>próxima / volume +</small></button>
+          </div>
+          <label class="sound-volume" for="soundVolume"><span>Volume <output id="soundVolumeOutput">60%</output></span><input id="soundVolume" type="range" min="0" max="100" value="60" step="5"></label>
+        </div>
+
+        <div class="tab-panel autonomous-panel" id="autonomousPanel" data-panel="autonomous" role="tabpanel" hidden>
+          <div class="panel-intro"><span class="panel-kicker">VISÃO MONOCULAR</span><h3>Navegação autônoma</h3><p>A trajetória será calculada somente pela câmera. Se a visão desaparecer, o robô para.</p></div>
+          <label class="camera-url" for="cameraUrl"><span>Fluxo compartilhado pelo servidor</span><div><input id="cameraUrl" type="text" value="/api/camera/stream" spellcheck="false" readonly><button id="connectCamera" type="button">Reconectar</button></div></label>
+          <div class="autonomous-readout"><strong id="autonomousModeStatus">Aguardando ativação</strong><span id="autonomousModeDetail">Selecione Autônomo para liberar a máquina de estados.</span></div>
+        </div>
+
+        <div class="safety-message" id="safetyMessage" data-level="safe" role="status">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 4 6v5c0 5.2 3.4 8.5 8 10 4.6-1.5 8-4.8 8-10V6l-8-3Z"/><path d="m8.5 12 2.2 2.2 4.8-5"/></svg>
+          <span><strong>Saídas protegidas</strong><small id="safetyReason">Inicialização segura</small></span>
+        </div>
+      </aside>
+    </section>
+
+    <section class="telemetry" aria-labelledby="telemetryTitle">
+      <div class="telemetry-heading">
+        <h2 id="telemetryTitle">Telemetria do veículo</h2>
+        <p>Valores gerados pelo gêmeo digital</p>
+      </div>
+
+      <div class="motor-channel">
+        <div class="motor-title"><span>Banco esquerdo</span><strong id="leftMotorValue">0%</strong></div>
+        <div class="bipolar-meter" aria-label="Potência dos motores esquerdos"><i id="leftMotorBar"></i><b></b></div>
+        <small>M1 + M2</small>
+      </div>
+      <div class="motor-channel">
+        <div class="motor-title"><span>Banco direito</span><strong id="rightMotorValue">0%</strong></div>
+        <div class="bipolar-meter" aria-label="Potência dos motores direitos"><i id="rightMotorBar"></i><b></b></div>
+        <small>M3 + M4</small>
+      </div>
+
+      <div class="telemetry-metric">
+        <span>Bateria</span>
+        <strong id="batteryValue">86%</strong>
+        <div class="linear-meter"><i id="batteryBar"></i></div>
+        <small>fonte simulada</small>
+      </div>
+      <div class="telemetry-metric">
+        <span>Enlace</span>
+        <strong id="rssiValue">−47 dBm</strong>
+        <div class="signal-bars" id="signalBars" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+        <small id="transportValue">HTTP local</small>
+      </div>
+      <div class="telemetry-metric state-metric">
+        <span>Estado</span>
+        <strong id="systemState">PRONTO</strong>
+        <small id="heartbeatAge">heartbeat 0 ms</small>
+      </div>
+    </section>
+
+    <section class="diagnostics" aria-label="Simulação e diagnóstico">
+      <article class="simulator-panel">
+        <div class="section-heading">
+          <div>
+            <h2>Cenário de ensaio</h2>
+            <p>Injete estimativas da câmera sintética antes de abrir o mundo 3D.</p>
+          </div>
+          <button class="text-button" id="resetButton" type="button">Reiniciar ensaio</button>
+        </div>
+
+        <label class="scenario-range" for="obstacleRange">
+          <span>Distância de ensaio simulada (não é leitura da câmera) <output id="obstacleOutput" for="obstacleRange">148 cm · simulada</output></span>
+          <input id="obstacleRange" type="range" min="5" max="250" value="148" step="1">
+          <span class="range-scale"><small>perigo</small><small>atenção</small><small>livre</small></span>
+        </label>
+
+        <div class="scenario-controls">
+          <label class="link-switch">
+            <input id="linkToggle" type="checkbox" checked>
+            <span aria-hidden="true"></span>
+            <strong>Enlace de controle</strong>
+            <small>Desative para testar o failsafe</small>
+          </label>
+          <div class="scenario-presets" role="group" aria-label="Cenários prontos">
+            <button type="button" data-scenario="clear">Corredor livre</button>
+            <button type="button" data-scenario="obstacle">Parede próxima</button>
+            <button type="button" data-scenario="disconnect">Perda de sinal</button>
+          </div>
+        </div>
+      </article>
+
+      <article class="event-panel">
+        <div class="section-heading">
+          <div>
+            <h2>Registro operacional</h2>
+            <p>Transições, atuações e bloqueios do sistema.</p>
+          </div>
+          <span class="event-count" id="eventCount">0 eventos</span>
+        </div>
+        <ol class="event-log" id="eventLog" role="log" aria-live="polite" aria-relevant="additions" aria-atomic="false">
+          <li class="event-empty">Aguardando eventos do simulador…</li>
+        </ol>
+      </article>
+    </section>
+  </main>
+
+  <dialog class="network-dialog" id="networkDialog" aria-labelledby="networkDialogTitle">
+    <form method="dialog" class="network-dialog-card" id="networkForm">
+      <div class="network-dialog-heading">
+        <div><span class="panel-kicker">CONFIGURAÇÃO DE CAMPO</span><h2 id="networkDialogTitle">Rede dos dispositivos</h2></div>
+        <button class="dialog-close" id="networkDialogClose" type="submit" value="cancel" aria-label="Fechar">×</button>
+      </div>
+      <p class="network-dialog-intro">Use os nomes mDNS quando possível: <code>esp32-cam.local</code> e <code>robo-c6.local</code>. Eles continuam iguais mesmo quando o roteador troca o IP por DHCP. O C6 trabalha somente em 2,4 GHz; uma rede marcada <strong>5G</strong> não funcionará.</p>
+      <div class="network-fields">
+        <label><span>URL ou hostname da câmera</span><input id="networkCameraUrl" type="url" placeholder="http://esp32-cam.local/capture ou http://IP:4747/video" autocomplete="off"></label>
+        <label><span>URL ou hostname do ESP32-C6</span><input id="networkRobotUrl" type="url" placeholder="http://robo-c6.local ou http://IP" autocomplete="off"></label>
+        <label><span>Nome do Wi‑Fi do C6 (2,4 GHz)</span><input id="networkWifiSsid" type="text" maxlength="32" autocomplete="off"></label>
+        <label><span>Senha do Wi‑Fi</span><input id="networkWifiPassword" type="password" maxlength="63" autocomplete="new-password"></label>
+      </div>
+      <div class="network-dialog-actions">
+        <button class="secondary-button" id="networkSaveEndpoints" type="button">Salvar endereços</button>
+        <button class="primary-button" id="networkProvisionWifi" type="button">Enviar Wi‑Fi ao C6</button>
+      </div>
+      <section class="usb-provisioning" aria-labelledby="usbProvisioningTitle">
+        <div class="usb-provisioning-heading">
+          <div><span class="panel-kicker">CONFIGURAÇÃO DIRETA</span><h3 id="usbProvisioningTitle">USB da placa</h3></div>
+          <span class="usb-port-status" id="usbPortStatus">Nenhuma porta selecionada</span>
+        </div>
+        <p>Use o navegador para escolher a porta USB e enviar somente a rede Wi‑Fi. Isso não regrava o firmware.</p>
+        <div class="usb-provisioning-controls">
+          <button class="secondary-button" id="usbConnectButton" type="button">Scan USB / selecionar ESP</button>
+          <label><span>Placa alvo</span><select id="usbBoardTarget"><option value="auto">Detectar automaticamente</option><option value="c6">ESP32-C6 · motores</option><option value="cam">ESP32-CAM · vídeo</option></select></label>
+        </div>
+        <button class="primary-button usb-send-button" id="usbSendWifi" type="button" disabled>Enviar Wi‑Fi pela USB</button>
+      </section>
+      <p class="network-dialog-status" id="networkDialogStatus" role="status" aria-live="polite">Aguardando configuração.</p>
+      <p class="network-dialog-note">A senha é enviada diretamente pela USB e não é exibida no painel depois do envio. O navegador precisa suportar Web Serial (Chrome, Edge ou Brave).</p>
+    </form>
+  </dialog>
+
+  <footer class="footer-note">
+    <span>Gêmeo digital · dados sintéticos</span>
+    <span>API <code>/api/state</code></span>
+    <span id="footerUptime">sessão 0 s</span>
+  </footer>
+
+  <div class="toast-region" id="toastRegion" aria-live="assertive" aria-atomic="true"></div>
+  <script src="/app.js" defer></script>
+</body>
+</html>
